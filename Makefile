@@ -1,6 +1,9 @@
+SHELL=/usr/bin/bash
+
 PROJECT:=/mnt/lfs
 WORKSPACE:=${PROJECT}/workspace
 LFS:=${PROJECT}/rootfs
+STRIP:=workspace/tools/bin/loongarch64-lfs-linux-gnu-strip
 
 default: rootfs
 
@@ -21,11 +24,16 @@ tarball:
 image:
 	docker build -f images/Dockerfile -t minifs images
 
+.PHONY: strip
+strip:
+	find rootfs/usr/{bin,lib,libexec} -type f -exec file {} \; | grep "\<ELF\>" | awk -F ':' '{print $$1}' | \
+		xargs ${STRIP} --strip-unneeded
+	
 clean: clean-rootfs clean-workspace
 clean-rootfs:
 	rm -rf rootfs/*
 clean-workspace:
-	rm -rf workspace/tools/* workspace/build/* workspace/stages/*
+	rm -rf workspace/{tools,build,stage}/* 
 image-build:
 	docker build \
 		--build-arg https_proxy=${https_proxy} \
@@ -33,4 +41,3 @@ image-build:
 		-f images/Dockerfile.build \
 		-t minifs-build \
 		images
-

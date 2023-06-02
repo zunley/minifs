@@ -42,7 +42,7 @@ Project Layout
     - `scripts` 构建脚本
     - `stages` 步骤记录
 
-## 编译
+## 编译 rootfs
 ```
 make roorfs 
 ```

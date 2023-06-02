@@ -483,3 +483,39 @@ function cross_compile_gcc
 
     ln -sv gcc $LFS/usr/bin/cc
 }
+
+function cross_compile_ca_certificates
+{
+    prologue ca-certificates-$CA_CERTIFICATES_VERSION tar.bz2
+    CC=$LFS_TGT-gcc make
+    make DESTDIR=$LFS install
+    epilogue
+}
+
+function cross_compile_openssl
+{
+    prologue openssl-$OPENSSL_VERSION tar.gz
+    CC=$LFS_TGT-gcc \
+    ./Configure --prefix=/usr \
+        --openssldir=/etc/ssl \
+        --libdir=lib \
+        shared zlib linux-generic64
+    make
+    sed -i '/INSTALL_LIBS/s/libcrypto.a libssl.a//' Makefile
+    make DESTDIR=$LFS install
+    epilogue
+}
+
+function cross_compile_curl
+{
+    prologue curl-$CURL_VERSION tar.gz
+    ./configure --prefix=/usr --libdir=/usr/lib \
+        --build=$(config.guess) \
+        --host=$LFS_TGT \
+        --with-openssl \
+        --enable-threaded-resolver \
+        --with-ca-path=/etc/ssl/certs
+    make
+    make DESTDIR=$LFS install
+    epilogue
+}

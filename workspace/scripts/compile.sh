@@ -96,3 +96,6 @@ run cross_compile_mpfr
 run cross_compile_mpc
 run cross_compile_binutils
 run cross_compile_gcc
+run cross_compile_ca_certificates
+run cross_compile_openssl
+run cross_compile_curl
