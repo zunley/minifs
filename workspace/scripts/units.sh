@@ -408,6 +408,8 @@ function cross_compile_gmp
     make
     make DESTDIR=$LFS install
     epilogue
+
+    rm -v $LFS/usr/lib/lib{gmp,gmpxx}.la
 }
 
 function cross_compile_mpfr
@@ -423,6 +425,8 @@ function cross_compile_mpfr
     make
     make DESTDIR=$LFS install
     epilogue
+
+    rm -v $LFS/usr/lib/libmpfr.la
 }
 
 function cross_compile_mpc
@@ -437,6 +441,8 @@ function cross_compile_mpc
     make
     make DESTDIR=$LFS install
     epilogue
+
+    rm -v $LFS/usr/lib/libmpc.la
 }
 
 function cross_compile_binutils
