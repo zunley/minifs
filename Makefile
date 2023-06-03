@@ -29,11 +29,15 @@ strip:
 	find rootfs/usr/{bin,lib,libexec} -type f -exec file {} \; | grep "\<ELF\>" | awk -F ':' '{print $$1}' | \
 		xargs ${STRIP} --strip-unneeded
 	
-clean: clean-rootfs clean-workspace
+clean: clean-rootfs 
 clean-rootfs:
+	# delete rootfs and stage file for rebuild
 	rm -rf rootfs/*
+	find workspace/stages -name cross_compile\* -delete
+	rm -f workspace/stages/compile_linux_header
 clean-workspace:
 	rm -rf workspace/{tools,build,stage}/* 
+	find workspace/stages -name compile_tools\* -delete
 image-build:
 	docker build \
 		--build-arg https_proxy=${https_proxy} \
