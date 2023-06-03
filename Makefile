@@ -28,7 +28,17 @@ image:
 strip:
 	find rootfs/usr/{bin,lib,libexec} -type f -exec file {} \; | grep "\<ELF\>" | awk -F ':' '{print $$1}' | \
 		xargs ${STRIP} --strip-unneeded
-	
+
+.PHONY: update-ca
+update-ca:
+	cp $$(which qemu-loongarch64) rootfs/usr/local/bin/
+	cp workspace/scripts/update-ca.sh rootfs/usr/bin/
+	chroot rootfs /usr/bin/env -i \
+		PATH=/usr/bin:/usr/sbin \
+		/usr/bin/update-ca.sh
+	rm rootfs/usr/local/bin/qemu-loongarch64
+	rm rootfs/usr/bin/update-ca.sh
+
 clean: clean-rootfs 
 clean-rootfs:
 	# delete rootfs and stage file for rebuild
