@@ -99,3 +99,4 @@ run cross_compile_gcc
 run cross_compile_openssl
 run cross_compile_ca_certificates
 run cross_compile_curl
+run cross_compile_vim

@@ -525,3 +525,27 @@ function cross_compile_curl
     make DESTDIR=$LFS install
     epilogue
 }
+
+function cross_compile_vim
+{
+    prologue vim-$VIM_VERSION tar.xz
+    echo '#define SYS_VIMRC_FILE "/etc/vimrc"' >> src/feature.h
+
+    cat > src/auto/config.cache << EOF
+    vim_cv_getcwd_broken=no
+	vim_cv_toupper_broken=no
+	vim_cv_terminfo=yes
+	vim_cv_tgetent=zero
+	vim_cv_stat_ignores_slash=no
+	vim_cv_memmove_handles_overlap=yes
+	ac_cv_small_wchar_t=n
+EOF
+    ./configure --prefix=/usr \
+        --host=$LFS_TGT \
+        --with-tlib=ncurses
+    make
+    make DESTDIR=$LFS STRIP=$LFS_TGT-strip install
+    epilogue
+
+    ln -sv vim $LFS/usr/bin/vi
+}
