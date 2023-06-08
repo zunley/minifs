@@ -32,7 +32,9 @@ OPENSSL_VERSION=3.0.8
 CA_CERTIFICATES_VERSION=20230506
 VIM_VERSION=9.0.1273
 
-: ${LFS?} ${WORKSPACE}
+LFS=$PROJECT/rootfs
+WORKSPACE=$PROJECT/workspace
+
 
 export LFS_SOURCES=$WORKSPACE/sources
 export LFS_BUILD=$WORKSPACE/build
@@ -44,9 +46,46 @@ export PATH=$WORKSPACE/tools/bin:$PATH
 export CONFIG_SITE=$LFS/usr/share/config.site
 export MAKEFLAGS="-j`nproc`"
 
+STAGE=$WORKSPACE/stages
+log_file=$WORKSPACE/compile.log
+
+function init
+{
+    STAGE=$STAGE/$1
+}
+
+function log
+{
+    echo "$1" >> $log_file
+}
+
+function show_log
+{
+    cat $log_file
+}
+
+function run
+{
+    cmd=$1                               
+    name=$(echo $1 | sed -e 's/_/ /g')
+
+    if [ -f $STAGE/$cmd ]; then
+        log "skip: $cmd"
+        return 0
+    fi
+
+    start=$(date +%s.%N)
+    eval $cmd
+    end=$(date +%s.%N)
+    runtime=$(echo "$end - $start" | bc)
+    log "$name: $runtime"
+
+    touch $STAGE/$cmd
+}
+
 function print
 {
-    echo $1
+    echo "$1"
 }
 
 function prologue
@@ -54,7 +93,7 @@ function prologue
     project=$1
     suffix=$2                                         
     rm -rf $LFS_BUILD/$project
-    tar -xf $LFS_SOURCES/$project.$suffix -C $LFS_BUILD
+    tar -xf $LFS_SOURCES/archives/$project.$suffix -C $LFS_BUILD
     pushd $LFS_BUILD/$project
 }
 

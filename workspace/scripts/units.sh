@@ -1,15 +1,5 @@
 #!/bin/bash
 
-function file_system_layout
-{
-    mkdir -pv $LFS/{etc,var,run} $LFS/usr/{bin,lib,sbin} $LFS/{dev,proc,sys}
-    for i in bin lib sbin; do
-        ln -sv usr/$i $LFS/$i
-    done
-    ln -sv usr/lib $LFS/lib64
-    mkdir -pv $WORKSPACE/{sources,build,tools,stages}
-}
-
 function compile_tool_binutils
 {
     prologue binutils-$BINUTILS_VERSION tar.xz
@@ -26,22 +16,42 @@ function compile_tool_binutils
     epilogue
 }
 
+function compile_tool_gmp
+{
+    prologue gmp-$GMP_VERSION tar.xz
+    ./configure --prefix=$LFS_TOOLS \
+        --enable-cxx \
+        --disable-static
+    make
+    make install
+    epilogue
+}
+
+function compile_tool_mpfr
+{
+    prologue mpfr-$MPFR_VERSION tar.xz
+    ./configure --prefix=$LFS_TOOLS \
+        --disable-static \
+        --with-gmp=$LFS_TOOLS
+    make
+    make install
+    epilogue
+}
+
+function compile_tool_mpc
+{
+    prologue mpc-$MPC_VERSION tar.gz
+    ./configure --prefix=$LFS_TOOLS \
+        --disable-static \
+        --with-gmp=$LFS_TOOLS
+    make
+    make install
+    epilogue
+}
+
 function compile_tool_gcc_simple
 {
-    rm -rf $LFS_BUILD/gcc-$GCC_VERSION
-    rm -rf $LFS_BUILD/gcc-$GMP_VERSION
-    rm -rf $LFS_BUILD/gcc-$MPFR_VERSION
-    rm -rf $LFS_BUILD/gcc-$MPC_VERSION
-	tar -xf $LFS_SOURCES/gcc-$GCC_VERSION.tar.xz -C   $LFS_BUILD/
-	tar -xf $LFS_SOURCES/mpfr-$MPFR_VERSION.tar.xz -C $LFS_BUILD/
-	tar -xf $LFS_SOURCES/gmp-$GMP_VERSION.tar.xz -C   $LFS_BUILD/
-	tar -xf $LFS_SOURCES/mpc-$MPC_VERSION.tar.gz -C   $LFS_BUILD/
-	mv -v $LFS_BUILD/mpfr-$MPFR_VERSION $LFS_BUILD/gcc-$GCC_VERSION/mpfr
-	mv -v $LFS_BUILD/gmp-$GMP_VERSION $LFS_BUILD/gcc-$GCC_VERSION/gmp
-	mv -v $LFS_BUILD/mpc-$MPC_VERSION $LFS_BUILD/gcc-$GCC_VERSION/mpc
-
-	pushd $LFS_BUILD/gcc-$GCC_VERSION
-
+    prologue gcc-$GCC_VERSION tar.xz
     sed -i 's/lib64/lib/g' gcc/config/loongarch/t-linux
     sed -i 's/lib64/lib/g' gcc/config/loongarch/linux.h
 
@@ -54,6 +64,9 @@ function compile_tool_gcc_simple
 		--with-glibc-version=2.37 \
 		--with-sysroot=$LFS       \
 		--with-newlib             \
+        --with-gmp=$LFS_TOOLS \
+        --with-mpfr=$LFS_TOOLS \
+        --with-mpc=$LFS_TOOLS \
 		--without-headers         \
 		--enable-default-pie      \
 		--enable-default-ssp      \
@@ -73,7 +86,7 @@ function compile_tool_gcc_simple
     cd ..
     cat gcc/limitx.h gcc/glimits.h gcc/limity.h > \
         `dirname $($LFS_TGT-gcc -print-libgcc-file-name)`/include/limits.h
-	popd 
+    epilogue
 }
 
 function compile_tool_autoconf
@@ -94,7 +107,7 @@ function compile_tool_automake
     epilogue
 }
 
-function compile_linux_headers
+function install_linux_header
 {
     prologue linux-$LINUX_VERSION tar.xz
     make mrproper
@@ -108,7 +121,7 @@ function compile_linux_headers
 function cross_compile_glibc
 {
     prologue glibc-$GLIBC_VERSION tar.xz
-    patch -Np1 -i $LFS_SOURCES/glibc-2.37-fhs-1.patch
+    patch -Np1 -i $LFS_SOURCES/patches/glibc-2.37-fhs-1.patch
     mkdir -v build
     cd build
     echo "rootsbindir=/usr/sbin" > configparms
@@ -133,20 +146,7 @@ function cross_compile_glibc
 
 function compile_tool_gcc_full
 {
-    rm -rf $LFS_BUILD/gcc-$GCC_VERSION
-    rm -rf $LFS_BUILD/gmp-$GMP_VERSION
-    rm -rf $LFS_BUILD/mpfr-$MPFR_VERSION
-    rm -rf $LFS_BUILD/mpc-$MPC_VERSION
-	tar -xf $LFS_SOURCES/gcc-$GCC_VERSION.tar.xz -C   $LFS_BUILD/
-	tar -xf $LFS_SOURCES/mpfr-$MPFR_VERSION.tar.xz -C $LFS_BUILD/
-	tar -xf $LFS_SOURCES/gmp-$GMP_VERSION.tar.xz -C   $LFS_BUILD/
-	tar -xf $LFS_SOURCES/mpc-$MPC_VERSION.tar.gz -C   $LFS_BUILD/
-	mv -v $LFS_BUILD/mpfr-$MPFR_VERSION $LFS_BUILD/gcc-$GCC_VERSION/mpfr
-	mv -v $LFS_BUILD/gmp-$GMP_VERSION $LFS_BUILD/gcc-$GCC_VERSION/gmp
-	mv -v $LFS_BUILD/mpc-$MPC_VERSION $LFS_BUILD/gcc-$GCC_VERSION/mpc
-
-    pushd $LFS_BUILD/gcc-$GCC_VERSION
-
+    prologue gcc-$GCC_VERSION tar.xz
     sed -i 's/lib64/lib/g' gcc/config/loongarch/t-linux
     sed -i 's/lib64/lib/g' gcc/config/loongarch/linux.h
 
@@ -157,19 +157,21 @@ function compile_tool_gcc_full
         --host=$(config.guess) \
         --target=$LFS_TGT \
         --with-sysroot=$LFS \
+        --with-gmp=$LFS_TOOLS \
+        --with-mpfr=$LFS_TOOLS \
+        --with-mpc=$LFS_TOOLS \
         --enable-default-pie \
         --enable-default-ssp \
         --enable-languages=c,c++
     make
     make install
-
-    popd
+    epilogue
 }
 
 function cross_compile_m4
 {
     prologue m4-$M4_VERSION tar.xz
-    patch -Np1 -i $LFS_SOURCES/m4-1.4.19-loongarch64.patch
+    patch -Np1 -i $LFS_SOURCES/patches/m4-1.4.19-loongarch64.patch
     ./configure --prefix=/usr   \
             --build=$(build-aux/config.guess) \
             --host=$LFS_TGT \
@@ -514,7 +516,7 @@ function cross_compile_openssl
 
 function cross_compile_curl
 {
-    prologue curl-$CURL_VERSION tar.gz
+    prologue curl-$CURL_VERSION tar.xz
     ./configure --prefix=/usr --libdir=/usr/lib \
         --build=$(config.guess) \
         --host=$LFS_TGT \
@@ -528,7 +530,7 @@ function cross_compile_curl
 
 function cross_compile_vim
 {
-    prologue vim-$VIM_VERSION tar.xz
+    prologue vim-$VIM_VERSION tar.gz
     echo '#define SYS_VIMRC_FILE "/etc/vimrc"' >> src/feature.h
 
     cat > src/auto/config.cache << EOF

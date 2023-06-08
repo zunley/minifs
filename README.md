@@ -42,17 +42,9 @@ Project Layout
     - `scripts` 构建脚本
     - `stages` 步骤记录
 
-## 编译 rootfs
+## 编译
 ```
-make roorfs 
-```
-### 打包 rootfs
-```
-make tarball
-```
-### 制作 minifs 镜像
-```
-make image
+make
 ```
 
 ## 一般编译步骤

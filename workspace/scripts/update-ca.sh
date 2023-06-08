@@ -2,10 +2,11 @@
 
 set -o errexit
 set -o nounset
+
 ORIGINCRTDIR="/usr/share/ca-certificates/mozilla"
 TARGETPEMDIR="/etc/ssl/certs"
 
-
+# This script must be run in chroot.
 # link pem -> crt
 for crt in $ORIGINCRTDIR/*.crt;
 do

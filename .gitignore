@@ -1,8 +1,9 @@
-rootfs/*
-workspace/build/*
-workspace/sources/*
-workspace/tools/*
-workspace/stages/*
-workspace/compile.log
-**/rootfs.tar.gz
+/rootfs/
+/workspace/build
+/workspace/tools
+/workspace/stages
+/workspace/sources/archives
+**/*.log
+**/*.gz
+**/*.xz
 **/qemu-loongarch64

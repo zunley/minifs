@@ -6,7 +6,6 @@ set -o nounset
 source $WORKSPACE/scripts/header.sh
 source $WORKSPACE/scripts/units.sh
 
-#
 # Project Layout
 # ├── rootfs
 # │   ├── bin -> usr/bin
@@ -27,54 +26,11 @@ source $WORKSPACE/scripts/units.sh
 #     ├── stages
 #     └── tools
 
+init rootfs
+trap show_log EXIT
 
-log_file="$WORKSPACE/compile.log"
-cat /dev/null > $log_file
-
-function log
-{
-    echo $1 >> $log_file
-}
-
-function run
-{
-    cmd=$1                               
-    name=$(echo $1 | sed -e 's/_/ /g')
-
-    if [ -f $WORKSPACE/stages/$cmd ]; then
-        log "skip: $cmd"
-        return 0
-    fi
-
-    start=$(date +%s.%N)
-    eval $cmd
-    end=$(date +%s.%N)
-    runtime=$(echo "$end - $start" | bc)
-    log "$name: $runtime"
-
-    touch $WORKSPACE/stages/$cmd
-}
-
-function handle_exit
-{
-    cat $log_file
-}
-
-trap handle_exit EXIT
-
-# prepare
-run file_system_layout
-
-# compile tools
-run compile_tool_binutils
-run compile_tool_gcc_simple
-run compile_linux_headers
+run install_linux_header
 run cross_compile_glibc
-run compile_tool_gcc_full
-run compile_tool_autoconf
-run compile_tool_automake
-
-# cross compile minifs
 run cross_compile_m4
 run cross_compile_ncurses
 run cross_compile_bash
