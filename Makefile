@@ -30,7 +30,8 @@ tarball:
 
 .PHONY: image
 image:
-	docker build -f images/Dockerfile -t minifs .
+	cp -f workspace/tools/bin/qemu-loongarch64 archives/
+	docker build --no-cache -f images/Dockerfile -t minifs .
 
 .PHONY: init
 init: check-user clean-all sources
@@ -79,7 +80,7 @@ layout:
 	mkdir -pv workspace/{sources/archives,build,tools,stages/{rootfs,tools}}
 	mkdir -pv archives
 
-image-builder:
+builder:
 	docker build \
 		--build-arg https_proxy=${https_proxy} \
 		--build-arg http_proxy=${http_proxy} \

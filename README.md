@@ -2,7 +2,6 @@
 
 minifs(mini root file system) 是一个极简的 loongarch64 根文件系统。
 
-
 ## 预装
 - [x] bash
 - [x] binutils
@@ -43,20 +42,16 @@ Project Layout
     - `stages` 步骤记录
 
 ## 编译
+如果你是第一次运行这个项目，请先执行
+```
+make init
+```
+该命令将创建项目所需的基本文件结构并下载相应的软件包
+
+然后进行编译
 ```
 make
 ```
 
-## 一般编译步骤
-1. `make rootfs` 编译 rootfs 系统
-2. `make strip` 精简系统
-3. `make update-ca` 更新系统中的 ca 证书文件
-4. `make raball` 将 rootfs 打包成 tar 文件
-5. `make image` 将 tar 包制作成镜像
-
-## 注意
-- 整套流程在 x86 docker 上编译，不需要宿主机配置开发环境
-- 编译 rootfs 需要一个基础镜像 minifs-build，可以通过 `make image-build` 生成
-
 ## CHANGELOG
-- 2023.06.05 通过 strip 二进制文件，ROOTFS 压缩包由 800 M 缩减 150 M
+- 2023.06.05 通过 strip 二进制文件，rootfs 压缩包由 800 M 缩减 150 M

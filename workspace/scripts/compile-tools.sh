@@ -18,4 +18,4 @@ run cross_compile_glibc
 run compile_tool_gcc_full
 run compile_tool_autoconf
 run compile_tool_automake
-
+run compile_tool_qemu

@@ -107,6 +107,19 @@ function compile_tool_automake
     epilogue
 }
 
+function compile_tool_qemu
+{
+    prologue qemu-$QEMU_VERSION tar.xz
+    mkdir -pv build
+    cd build
+    ../configure --prefix=$LFS_TOOLS \
+        --target-list=loongarch64-linux-user \
+        --static
+    make
+    make install
+    epilogue
+}
+
 function install_linux_header
 {
     prologue linux-$LINUX_VERSION tar.xz
