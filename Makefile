@@ -5,6 +5,9 @@ WORKSPACE:=${PROJECT}/workspace
 LFS:=${PROJECT}/rootfs
 STRIP:=workspace/tools/bin/loongarch64-lfs-linux-gnu-strip
 
+BUILDER_IMAGE:=merore/minifs-builder
+IMAGE:=merore/minifs
+
 default: check-user tools rootfs strip update-ca tarball image
 
 tools:
@@ -31,7 +34,12 @@ tarball:
 .PHONY: image
 image:
 	cp -f workspace/tools/bin/qemu-loongarch64 archives/
-	docker build --no-cache -f images/Dockerfile -t minifs .
+	docker build --no-cache -f images/Dockerfile -t ${IMAGE} .
+
+.PHONY: push
+push:
+	docker push ${BUILDER_IMAGE}
+	docker push ${IMAGE}
 
 .PHONY: init
 init: check-user clean-all sources
@@ -85,5 +93,5 @@ builder:
 		--build-arg https_proxy=${https_proxy} \
 		--build-arg http_proxy=${http_proxy} \
 		-f images/Dockerfile.builder \
-		-t minifs-builder \
+		-t ${BUILDER_IMAGE} \
 		images
